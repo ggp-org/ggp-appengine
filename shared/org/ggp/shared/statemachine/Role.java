@@ -7,7 +7,7 @@ import java.util.List;
 import org.ggp.shared.gdl.grammar.Gdl;
 import org.ggp.shared.gdl.grammar.GdlProposition;
 import org.ggp.shared.gdl.grammar.GdlRelation;
-import org.ggp.shared.statemachine.implementations.prover.ProverRole;
+import org.ggp.shared.statemachine.implementation.prover.ProverRole;
 
 @SuppressWarnings("serial")
 public class Role implements Serializable

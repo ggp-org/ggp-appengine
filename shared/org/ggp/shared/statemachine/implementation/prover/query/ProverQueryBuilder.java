@@ -1,4 +1,4 @@
-package org.ggp.shared.statemachine.implementations.prover.query;
+package org.ggp.shared.statemachine.implementation.prover.query;
 
 import java.util.HashSet;
 import java.util.List;

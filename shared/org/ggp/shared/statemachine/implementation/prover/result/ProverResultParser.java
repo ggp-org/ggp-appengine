@@ -1,4 +1,4 @@
-package org.ggp.shared.statemachine.implementations.prover.result;
+package org.ggp.shared.statemachine.implementation.prover.result;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,9 +13,9 @@ import org.ggp.shared.gdl.grammar.GdlTerm;
 import org.ggp.shared.statemachine.MachineState;
 import org.ggp.shared.statemachine.Move;
 import org.ggp.shared.statemachine.Role;
-import org.ggp.shared.statemachine.implementations.prover.ProverMachineState;
-import org.ggp.shared.statemachine.implementations.prover.ProverMove;
-import org.ggp.shared.statemachine.implementations.prover.ProverRole;
+import org.ggp.shared.statemachine.implementation.prover.ProverMachineState;
+import org.ggp.shared.statemachine.implementation.prover.ProverMove;
+import org.ggp.shared.statemachine.implementation.prover.ProverRole;
 
 public final class ProverResultParser
 {

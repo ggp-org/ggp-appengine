@@ -1,4 +1,4 @@
-package org.ggp.shared.statemachine.implementations.prover;
+package org.ggp.shared.statemachine.implementation.prover;
 
 import org.ggp.shared.gdl.grammar.GdlSentence;
 import org.ggp.shared.statemachine.Move;

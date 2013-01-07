@@ -1,4 +1,4 @@
-package org.ggp.shared.statemachine.implementations.prover;
+package org.ggp.shared.statemachine.implementation.prover;
 
 import java.io.Serializable;
 import java.util.Set;

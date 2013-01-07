@@ -1,4 +1,4 @@
-package org.ggp.shared.statemachine.implementations.prover;
+package org.ggp.shared.statemachine.implementation.prover;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,8 +14,8 @@ import org.ggp.shared.statemachine.StateMachine;
 import org.ggp.shared.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.shared.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.shared.statemachine.exceptions.TransitionDefinitionException;
-import org.ggp.shared.statemachine.implementations.prover.query.ProverQueryBuilder;
-import org.ggp.shared.statemachine.implementations.prover.result.ProverResultParser;
+import org.ggp.shared.statemachine.implementation.prover.query.ProverQueryBuilder;
+import org.ggp.shared.statemachine.implementation.prover.result.ProverResultParser;
 
 public class ProverStateMachine extends StateMachine
 {

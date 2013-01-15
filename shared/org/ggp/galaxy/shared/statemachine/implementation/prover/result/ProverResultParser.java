@@ -7,15 +7,11 @@ import java.util.Set;
 
 import org.ggp.galaxy.shared.gdl.grammar.GdlConstant;
 import org.ggp.galaxy.shared.gdl.grammar.GdlPool;
-import org.ggp.galaxy.shared.gdl.grammar.GdlProposition;
 import org.ggp.galaxy.shared.gdl.grammar.GdlSentence;
 import org.ggp.galaxy.shared.gdl.grammar.GdlTerm;
 import org.ggp.galaxy.shared.statemachine.MachineState;
 import org.ggp.galaxy.shared.statemachine.Move;
 import org.ggp.galaxy.shared.statemachine.Role;
-import org.ggp.galaxy.shared.statemachine.implementation.prover.ProverMachineState;
-import org.ggp.galaxy.shared.statemachine.implementation.prover.ProverMove;
-import org.ggp.galaxy.shared.statemachine.implementation.prover.ProverRole;
 
 public final class ProverResultParser
 {
@@ -27,7 +23,7 @@ public final class ProverResultParser
 		List<Move> moves = new ArrayList<Move>();
 		for (GdlSentence result : results)
 		{
-			moves.add(new ProverMove(result.get(1).toSentence()));
+			moves.add(new Move(result.get(1)));
 		}
 
 		return moves;
@@ -38,8 +34,8 @@ public final class ProverResultParser
 		List<Role> roles = new ArrayList<Role>();
 		for (GdlSentence result : results)
 		{
-			GdlProposition name = (GdlProposition) result.get(0).toSentence();
-			roles.add(new ProverRole(name));
+			GdlConstant name = (GdlConstant) result.get(0);
+			roles.add(new Role(name));
 		}
 
 		return roles;
@@ -52,6 +48,6 @@ public final class ProverResultParser
 		{
 			trues.add(GdlPool.getRelation(TRUE, new GdlTerm[] { result.get(0) }));
 		}
-		return new ProverMachineState(trues);
+		return new MachineState(trues);
 	}
 }

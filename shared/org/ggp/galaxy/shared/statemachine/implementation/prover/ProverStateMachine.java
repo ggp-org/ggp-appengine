@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.ggp.galaxy.shared.gdl.grammar.*;
+import org.ggp.galaxy.shared.logging.GamerLogger;
 import org.ggp.galaxy.shared.prover.Prover;
 import org.ggp.galaxy.shared.prover.aima.AimaProver;
 import org.ggp.galaxy.shared.statemachine.MachineState;
@@ -51,6 +52,7 @@ public class ProverStateMachine extends StateMachine
 
 		if (results.size() != 1)
 		{
+		    GamerLogger.logError("StateMachine", "Got goal results of size: " + results.size() + " when expecting size one.");
 			throw new GoalDefinitionException(state, role);
 		}
 
@@ -112,21 +114,5 @@ public class ProverStateMachine extends StateMachine
 	public boolean isTerminal(MachineState state)
 	{
 		return prover.prove(ProverQueryBuilder.getTerminalQuery(), ProverQueryBuilder.getContext(state));
-	}
-
-	@Override
-	public MachineState getMachineStateFromSentenceList(Set<GdlSentence> sentenceList) {
-		return new ProverMachineState(sentenceList);
-	}
-
-	@Override
-	public Move getMoveFromSentence(GdlSentence sentence) {
-		return new ProverMove(sentence);
-	}
-
-	@Override
-	public Role getRoleFromProp(GdlProposition proposition) {
-		return new ProverRole(proposition);
-	}
-
+	}	
 }

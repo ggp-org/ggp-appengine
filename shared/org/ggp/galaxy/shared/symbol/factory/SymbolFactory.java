@@ -5,11 +5,30 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.ggp.galaxy.shared.symbol.factory.exceptions.SymbolFormatException;
-import org.ggp.galaxy.shared.symbol.grammar.*;
+import org.ggp.galaxy.shared.symbol.grammar.Symbol;
+import org.ggp.galaxy.shared.symbol.grammar.SymbolAtom;
+import org.ggp.galaxy.shared.symbol.grammar.SymbolList;
+import org.ggp.galaxy.shared.symbol.grammar.SymbolPool;
+
 
 public final class SymbolFactory
 {
+    public static Symbol create(String string) throws SymbolFormatException
+    {
+        try
+        {
+            String preprocessed = preprocess(string);
+            List<String> tokens = lex(preprocessed);
+            return convert(new LinkedList<String>(tokens));
+        }
+        catch (Exception e)
+        {
+            throw new SymbolFormatException(string);
+        }
+    }    
 
+    /* Private, implementation-specific methods below here */
+    
 	private static Symbol convert(LinkedList<String> tokens)
 	{
 		if (tokens.getFirst().equals("("))
@@ -41,20 +60,6 @@ public final class SymbolFactory
 		return SymbolPool.getList(contents);
 	}
 
-	public static Symbol create(String string) throws SymbolFormatException
-	{
-		try
-		{
-			String preprocessed = preprocess(string);
-			List<String> tokens = lex(preprocessed);
-			return convert(new LinkedList<String>(tokens));
-		}
-		catch (Exception e)
-		{
-			throw new SymbolFormatException(string);
-		}
-	}
-
 	private static List<String> lex(String string)
 	{
 		List<String> tokens = new ArrayList<String>();
@@ -68,8 +73,6 @@ public final class SymbolFactory
 
 	private static String preprocess(String string)
 	{
-		//string = string.toLowerCase();
-
 		string = string.replaceAll("\\(", " ( ");
 		string = string.replaceAll("\\)", " ) ");
 
@@ -78,5 +81,4 @@ public final class SymbolFactory
 
 		return string;
 	}
-
 }

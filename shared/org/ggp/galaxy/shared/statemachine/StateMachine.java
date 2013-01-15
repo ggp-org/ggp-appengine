@@ -9,8 +9,9 @@ import java.util.Random;
 import java.util.Set;
 
 import org.ggp.galaxy.shared.gdl.grammar.Gdl;
-import org.ggp.galaxy.shared.gdl.grammar.GdlProposition;
+import org.ggp.galaxy.shared.gdl.grammar.GdlConstant;
 import org.ggp.galaxy.shared.gdl.grammar.GdlSentence;
+import org.ggp.galaxy.shared.gdl.grammar.GdlTerm;
 import org.ggp.galaxy.shared.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.galaxy.shared.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.galaxy.shared.statemachine.exceptions.TransitionDefinitionException;
@@ -41,9 +42,17 @@ public abstract class StateMachine
     // The following methods are included in the abstract StateMachine base so
     // implementations which use alternative Role/Move/State representations
     // can look up/compute what some Gdl corresponds to in their representation.
-    public abstract Role getRoleFromProp(GdlProposition proposition);   
-    public abstract Move getMoveFromSentence(GdlSentence sentence); 
-    public abstract MachineState getMachineStateFromSentenceList(Set<GdlSentence> sentenceList);
+    // They are implemented for convenience, using the default ways of generating
+    // these objects, but they can be overridden to support machine-specific objects.
+    public MachineState getMachineStateFromSentenceList(Set<GdlSentence> sentenceList) {
+        return new MachineState(sentenceList);
+    }
+    public Role getRoleFromConstant(GdlConstant constant) {
+        return new Role(constant);
+    }
+    public Move getMoveFromTerm(GdlTerm term) {
+        return new Move(term);
+    }
 
     // ============================================
     //          Stubs for advanced methods

@@ -38,7 +38,7 @@ public final class ProverQueryBuilder
 
 	public static GdlRelation getGoalQuery(Role role)
 	{
-		return GdlPool.getRelation(GOAL, new GdlTerm[] { role.getName().toTerm(), VARIABLE });
+		return GdlPool.getRelation(GOAL, new GdlTerm[] { role.getName(), VARIABLE });
 	}
 
 	public static GdlRelation getInitQuery()
@@ -48,7 +48,7 @@ public final class ProverQueryBuilder
 
 	public static GdlRelation getLegalQuery(Role role)
 	{
-		return GdlPool.getRelation(LEGAL, new GdlTerm[] { role.getName().toTerm(), VARIABLE });
+		return GdlPool.getRelation(LEGAL, new GdlTerm[] { role.getName(), VARIABLE });
 	}
 
 	public static GdlRelation getNextQuery()
@@ -68,7 +68,7 @@ public final class ProverQueryBuilder
 
 	public static GdlRelation toDoes(Role role, Move move)
 	{
-		return GdlPool.getRelation(DOES, new GdlTerm[] { role.getName().toTerm(), move.getContents().toTerm() });
+		return GdlPool.getRelation(DOES, new GdlTerm[] { role.getName(), move.getContents() });
 	}
 
 }

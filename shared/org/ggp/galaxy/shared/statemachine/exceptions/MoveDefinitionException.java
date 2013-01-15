@@ -6,6 +6,7 @@ import org.ggp.galaxy.shared.statemachine.Role;
 @SuppressWarnings("serial")
 public final class MoveDefinitionException extends Exception
 {
+
 	private final Role role;
 	private final MachineState state;
 

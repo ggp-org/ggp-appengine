@@ -3,6 +3,9 @@ package org.ggp.galaxy.shared.game;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ggp.galaxy.shared.game.Game;
+import org.ggp.galaxy.shared.gdl.factory.exceptions.GdlFormatException;
+import org.ggp.galaxy.shared.symbol.factory.exceptions.SymbolFormatException;
 import org.ggp.galaxy.shared.gdl.factory.GdlFactory;
 import org.ggp.galaxy.shared.gdl.grammar.Gdl;
 import org.ggp.galaxy.shared.symbol.factory.SymbolFactory;
@@ -18,7 +21,7 @@ import org.json.JSONObject;
  * Games do not necessarily have all of these fields. Games loaded from local
  * storage will not have a repository URL, and probably will be missing other
  * metadata as well. Games sent over the wire from a game server rather than
- * loaded from a repository are called "emphemeral" games, and contain only
+ * loaded from a repository are called "ephemeral" games, and contain only
  * their rulesheet; they have no metadata, and do not even have unique keys.
  * 
  * Aside from ephemeral games, all games have a key that is unique within their
@@ -41,27 +44,34 @@ import org.json.JSONObject;
  * can be many Match objects all associated with a single Game object, just
  * as there can be many matches played of a particular game.
  * 
+ * NOTE: Games operate only on "processed" rulesheets, which have been stripped
+ * of comments and are properly formatted as SymbolLists. Rulesheets which have
+ * not been processed in this fashion will break the Game object. This processing
+ * can be done by calling "Game.preprocessRulesheet" on the raw rulesheet. Note
+ * that rules transmitted over the network are always processed.
+ * 
  * @author Sam
  */
+
 public final class Game {
     private final String theKey;
     private final String theName;
     private final String theDescription;    
     private final String theRepositoryURL;
     private final String theStylesheet;
-    private final List<Gdl> theRules;
+    private final String theRulesheet;
 
-    public static Game createEphemeralGame(List<Gdl> theRules) {
-        return new Game(null, null, null, null, null, theRules);
+    public static Game createEphemeralGame(String theRulesheet) {
+        return new Game(null, null, null, null, null, theRulesheet);
     }
 
-    protected Game (String theKey, String theName, String theDescription, String theRepositoryURL, String theStylesheet, List<Gdl> theRules) {
+    protected Game (String theKey, String theName, String theDescription, String theRepositoryURL, String theStylesheet, String theRulesheet) {
         this.theKey = theKey;
         this.theName = theName;
         this.theDescription = theDescription;
         this.theRepositoryURL = theRepositoryURL;
         this.theStylesheet = theStylesheet;
-        this.theRules = theRules;
+        this.theRulesheet = theRulesheet;
     }
 
     public String getKey() {
@@ -83,9 +93,69 @@ public final class Game {
     public String getStylesheet() {
         return theStylesheet;
     }
+    
+    public String getRulesheet() {
+    	return theRulesheet;
+    }
+    
+    /**
+     * Pre-process a rulesheet into the standard form. This involves stripping
+     * comments and adding opening and closing parens so that the rulesheet is
+     * a valid SymbolList. This must be done to any raw rulesheets coming from
+     * the local disk or a repository server. This is always done to rulesheets
+     * before they're stored in Game objects or sent over the network as part
+     * of a START request.
+     * 
+     * @param raw rulesheet
+     * @return processed rulesheet
+     */
+    public static String preprocessRulesheet(String rawRulesheet) {
+		// First, strip all of the comments from the rulesheet.
+		StringBuilder rulesheetBuilder = new StringBuilder();
+		String[] rulesheetLines = rawRulesheet.split("[\n\r]");
+		for (int i = 0; i < rulesheetLines.length; i++) {
+			String line = rulesheetLines[i];
+			int comment = line.indexOf(';');
+			int cutoff = (comment == -1) ? line.length() : comment;
+			rulesheetBuilder.append(line.substring(0, cutoff));
+			rulesheetBuilder.append(" ");
+		}
+		String processedRulesheet = rulesheetBuilder.toString();
+		
+		// Add opening and closing parens for parsing as symbol list.
+		processedRulesheet = "( " + processedRulesheet + " )";
+		
+		return processedRulesheet;
+    }
 
+    /**
+     * Gets the GDL object representation of the game rulesheet. This representation
+     * is generated when "getRules" is called, rather than when the game is created,
+     * so that it's safe to drain the GDL pool between when the game repository is
+     * loaded and when the games are actually used. This doesn't incur a performance
+     * penalty because this method is usually called only once per match, when the
+     * state machine is initialized -- as a result it's actually better to only parse
+     * the rules when they're needed rather than parsing them for every game when the
+     * game repository is created.
+     * 
+     * @return
+     */
     public List<Gdl> getRules() {
-        return theRules;
+    	try {
+	        List<Gdl> rules = new ArrayList<Gdl>();
+	        SymbolList list = (SymbolList) SymbolFactory.create(theRulesheet);
+	        for (int i = 0; i < list.size(); i++)
+	        {
+	            rules.add(GdlFactory.create(list.get(i)));
+	        }
+	        return rules;
+    	} catch (GdlFormatException e) {
+    		e.printStackTrace();
+    		return null;
+    	} catch (SymbolFormatException e) {
+    		e.printStackTrace();
+    		return null;
+    	}        
     }
     
     public String serializeToJSON() {
@@ -96,14 +166,7 @@ public final class Game {
             theGameObject.put("theDescription", getDescription());
             theGameObject.put("theRepositoryURL", getRepositoryURL());
             theGameObject.put("theStylesheet", getStylesheet());
-            
-            // Serialize the rulesheet
-            StringBuilder theProcessedRulesheet = new StringBuilder("( ");
-            for (Gdl gdl : getRules()) {
-                theProcessedRulesheet.append(gdl + " ");
-            }
-            theProcessedRulesheet.append(" )");
-            theGameObject.put("theProcessedRulesheet", theProcessedRulesheet.toString());
+            theGameObject.put("theRulesheet", getRulesheet());
             
             return theGameObject.toString();
         } catch(Exception e) {
@@ -141,16 +204,17 @@ public final class Game {
                 theStylesheet = theGameObject.getString("theStylesheet");
             } catch (Exception e) {}
 
-            // Deserialize the rulesheet
-            String theRulesheet = theGameObject.getString("theProcessedRulesheet");
-            SymbolList ruleList = (SymbolList) SymbolFactory.create(theRulesheet);
-            List<Gdl> theRules = new ArrayList<Gdl>();
-            for (int i = 0; i < ruleList.size(); i++)
-            {
-                theRules.add(GdlFactory.create(ruleList.get(i)));
-            } 
+            String theRulesheet = null;
+            try {
+            	// TODO(schreib): Eventually get rid of this; it's kept only
+            	// to ensure compatibility with caches written using the older code.
+            	theRulesheet = theGameObject.getString("theProcessedRulesheet");
+            } catch (Exception e) {}
+            try {
+            	theRulesheet = theGameObject.getString("theRulesheet");
+            } catch (Exception e) {}
             
-            return new Game(theKey, theName, theDescription, theRepositoryURL, theStylesheet, theRules);
+            return new Game(theKey, theName, theDescription, theRepositoryURL, theStylesheet, theRulesheet);
         } catch(Exception e) {
             e.printStackTrace();
             return null;

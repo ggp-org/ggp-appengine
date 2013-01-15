@@ -2,11 +2,10 @@ package org.ggp.galaxy.shared.game;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.ggp.galaxy.shared.gdl.grammar.Gdl;
-import org.ggp.galaxy.shared.kif.KifReader;
+import org.ggp.galaxy.shared.game.Game;
+import org.ggp.galaxy.shared.game.GameRepository;
 import org.ggp.galaxy.shared.loader.RemoteResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,7 +21,7 @@ public final class RemoteGameRepository extends GameRepository {
     private final String theRepoURL;
     
     public RemoteGameRepository(String theURL) {
-        theRepoURL = theURL;
+        theRepoURL = properlyFormatURL(theURL);
     }
     
     protected Set<String> getUncachedGameKeys() {
@@ -36,7 +35,7 @@ public final class RemoteGameRepository extends GameRepository {
             
             return theGameKeys;
         } catch (Exception e) {
-            // TODO: Log this exception somewhere?
+            e.printStackTrace();
             return null;
         }
     }
@@ -53,6 +52,7 @@ public final class RemoteGameRepository extends GameRepository {
             JSONObject theMetadata = getGameMetadataFromRepository(theGameURL);
             return loadSingleGameFromMetadata(theKey, theGameURL, theMetadata);            
         } catch(IOException e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -65,6 +65,7 @@ public final class RemoteGameRepository extends GameRepository {
               theGameURL = addVersionToGameURL(theGameURL, theVersion);
             }
         } catch(JSONException e) {
+            e.printStackTrace();
             return null;
         }
         
@@ -75,10 +76,18 @@ public final class RemoteGameRepository extends GameRepository {
         
         String theDescription = getGameResourceFromMetadata(theGameURL, theMetadata, "description");                
         String theStylesheet = getGameResourceFromMetadata(theGameURL, theMetadata, "stylesheet");
-        List<Gdl> theRules = getGameRulesheetFromMetadata(theGameURL, theMetadata);
+        String theRulesheet = Game.preprocessRulesheet(getGameResourceFromMetadata(theGameURL, theMetadata, "rulesheet"));
         
-        if (theRules.size() == 0) return null;
-        return new Game(theKey, theName, theDescription, theGameURL, theStylesheet, theRules);        
+        if (theRulesheet == null || theRulesheet.isEmpty()) return null;
+        return new Game(theKey, theName, theDescription, theGameURL, theStylesheet, theRulesheet);        
+    }
+    
+    JSONObject getBundledMetadata() {
+        try {
+            return RemoteResourceLoader.loadJSON(theRepoURL + "/games/metadata");
+        } catch (IOException e) {
+            return null;
+        }
     }
     
     // ============================================================================================
@@ -106,13 +115,12 @@ public final class RemoteGameRepository extends GameRepository {
             return null;
         }
     } 
-        
-    protected static List<Gdl> getGameRulesheetFromMetadata(String theGameURL, JSONObject theMetadata) {
-        try {
-            String theRulesheetFile = theMetadata.getString("rulesheet");
-            return KifReader.readURL(theGameURL + theRulesheetFile);
-        } catch (Exception e) {
-            return null;
-        }
-    } 
+    
+    static String properlyFormatURL(String theURL) {
+        if (!theURL.startsWith("http://"))
+            theURL = "http://" + theURL;
+        if (theURL.endsWith("/"))
+            theURL = theURL.substring(0, theURL.length()-1);
+        return theURL;
+    }
 }

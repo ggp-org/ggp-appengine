@@ -5,16 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ggp.galaxy.shared.gdl.grammar.Gdl;
-import org.ggp.galaxy.shared.gdl.grammar.GdlProposition;
+import org.ggp.galaxy.shared.gdl.grammar.GdlConstant;
 import org.ggp.galaxy.shared.gdl.grammar.GdlRelation;
-import org.ggp.galaxy.shared.statemachine.implementation.prover.ProverRole;
 
 @SuppressWarnings("serial")
 public class Role implements Serializable
 {
-    protected final GdlProposition name;
+    protected final GdlConstant name;
 
-    public Role(GdlProposition name)
+    public Role(GdlConstant name)
     {
         this.name = name;
     }
@@ -31,7 +30,7 @@ public class Role implements Serializable
         return false;
     }
 
-    public GdlProposition getName()
+    public GdlConstant getName()
     {
         return name;
     }
@@ -61,10 +60,9 @@ public class Role implements Serializable
         List<Role> roles = new ArrayList<Role>();
         for (Gdl gdl : description) {
             if (gdl instanceof GdlRelation) {
-                //TODO: check if things like ( role ?player ) are legal
                 GdlRelation relation = (GdlRelation) gdl;               
                 if (relation.getName().getValue().equals("role")) {
-                    roles.add(new ProverRole((GdlProposition) relation.get(0).toSentence()));
+                    roles.add(new Role((GdlConstant) relation.get(0)));
                 }
             }
         }

@@ -3,13 +3,16 @@ package org.ggp.galaxy.shared.gdl.grammar;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public final class GdlPool
 {
-	private static final ConcurrentMap<String, GdlConstant> constantPool = new ConcurrentHashMap<String, GdlConstant>();
 	private static final ConcurrentMap<GdlTerm, ConcurrentMap<GdlTerm, GdlDistinct>> distinctPool = new ConcurrentHashMap<GdlTerm, ConcurrentMap<GdlTerm, GdlDistinct>>();
 	private static final ConcurrentMap<GdlConstant, ConcurrentMap<List<GdlTerm>, GdlFunction>> functionPool = new ConcurrentHashMap<GdlConstant, ConcurrentMap<List<GdlTerm>, GdlFunction>>();
 	private static final ConcurrentMap<GdlLiteral, GdlNot> notPool = new ConcurrentHashMap<GdlLiteral, GdlNot>();
@@ -18,7 +21,23 @@ public final class GdlPool
 	private static final ConcurrentMap<GdlConstant, ConcurrentMap<List<GdlTerm>, GdlRelation>> relationPool = new ConcurrentHashMap<GdlConstant, ConcurrentMap<List<GdlTerm>, GdlRelation>>();
 	private static final ConcurrentMap<GdlSentence, ConcurrentMap<List<GdlLiteral>, GdlRule>> rulePool = new ConcurrentHashMap<GdlSentence, ConcurrentMap<List<GdlLiteral>, GdlRule>>();
 	private static final ConcurrentMap<String, GdlVariable> variablePool = new ConcurrentHashMap<String, GdlVariable>();
-	
+    private static final ConcurrentMap<String, GdlConstant> constantPool = new ConcurrentHashMap<String, GdlConstant>();
+    private static final Map<String,String> constantCases = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
+    private static final Map<String,String> variableCases = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);    
+    
+    // Controls whether we normalize the case of incoming constants and variables.
+    public static boolean caseSensitive = true;
+
+    // Special keyword constants. These are never drained between games and are always
+    // represented as lower-case so that they can easily be referred to internally and
+    // so that all of the "true" objects are equal to each other in the Java == sense.
+    // For example, attempting to create a GdlConstant "TRUE" will return the same constant
+    // as if one had attempted to create the GdlConstant "true", regardless of whether the
+    // game-specific constants are case-sensitive or not. These special keywords are never
+    // sent over the network in PLAY requests and responses, so this should be safe.
+    private static final HashSet<String> keywords = new HashSet<String>(Arrays.asList(
+    		new String[] {"init","true","next","role","does","goal","legal","terminal","base","input"}));
+    
 	/**
 	 * Drains the contents of the GdlPool. Useful to control memory usage
 	 * once you have finished playing a large game.
@@ -33,12 +52,26 @@ public final class GdlPool
 	    propositionPool.clear();
 	    relationPool.clear();
 	    rulePool.clear();
-	    variablePool.clear();    
+	    variablePool.clear();	    
+	    variableCases.clear();
 	    
-	    // NOTE: We do *not* drain the constantPool because, elsewhere,
-	    // parts of the Prover rely on having a handle to the "true" constant
-	    // that does not change over the course of the program.
-	    //constantPool.clear();
+	    // When draining the pool between matches, we still need to preserve the keywords
+	    // since there are global references to them. For example, the Prover state machine
+	    // has a reference to the GdlConstant "true", and that reference must still point
+	    // to the authoritative GdlConstant "true" after the pool is drained and another
+	    // game has begun. As such, when draining the constant pool, these special keywords
+	    // are set aside and returned to the pool after all of the other constants (which
+	    // were game-specific) have been drained.
+	    Map<String, GdlConstant> keywordConstants = new HashMap<String, GdlConstant>();
+	    for (String keyword : keywords) {
+	    	keywordConstants.put(keyword, GdlPool.getConstant(keyword));
+	    }
+	    constantPool.clear();
+	    constantCases.clear();	    
+	    for (Map.Entry<String,GdlConstant> keywordEntry : keywordConstants.entrySet()) {
+	    	constantCases.put(keywordEntry.getKey(), keywordEntry.getKey());
+	    	constantPool.put(keywordEntry.getKey(), keywordEntry.getValue());
+	    }
 	}
 	
 	/**
@@ -61,13 +94,38 @@ public final class GdlPool
 
 	public static GdlConstant getConstant(String value)
 	{
-		GdlConstant ret = constantPool.get(value);
-		
+		if (keywords.contains(value.toLowerCase())) {
+			value = value.toLowerCase();
+		}
+	    if (!caseSensitive) {
+	        if (constantCases.containsKey(value)) {
+	            value = constantCases.get(value);
+	        } else {
+	            constantCases.put(value, value);
+	        }
+	    }
+	    
+		GdlConstant ret = constantPool.get(value);		
 		if(ret == null)
-			ret = addToPool(value, new GdlConstant(value), constantPool);
-		
+			ret = addToPool(value, new GdlConstant(value), constantPool);		
 		return ret;
 	}
+	
+    public static GdlVariable getVariable(String name)
+    {
+        if (!caseSensitive) {
+            if (variableCases.containsKey(name)) {
+                name = variableCases.get(name);
+            } else {
+                variableCases.put(name, name);
+            }
+        }        
+        
+        GdlVariable ret = variablePool.get(name);        
+        if(ret == null)
+            ret = addToPool(name, new GdlVariable(name), variablePool);
+        return ret;
+    }	
 
 	public static GdlDistinct getDistinct(GdlTerm arg1, GdlTerm arg2)
 	{
@@ -182,15 +240,6 @@ public final class GdlPool
 		GdlRule ret = bucket.get(body);
 		if(ret == null)
 			ret = addToPool(body, new GdlRule(head, body), bucket);
-		
-		return ret;
-	}
-
-	public static GdlVariable getVariable(String name)
-	{
-		GdlVariable ret = variablePool.get(name);
-		if(ret == null)
-			ret = addToPool(name, new GdlVariable(name), variablePool);
 		
 		return ret;
 	}

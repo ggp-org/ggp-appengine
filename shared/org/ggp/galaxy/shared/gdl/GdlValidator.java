@@ -100,7 +100,7 @@ public final class GdlValidator
 		}
 		else
 		{
-			if ( symbol.toString().equals("or") )
+			if ( symbol.toString().toLowerCase().equals("or") )
 			{
 				return true;
 			}

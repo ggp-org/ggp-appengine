@@ -8,6 +8,7 @@ import org.ggp.galaxy.shared.statemachine.Move;
 @SuppressWarnings("serial")
 public final class TransitionDefinitionException extends Exception
 {
+
 	private final List<Move> moves;
 	private final MachineState state;
 

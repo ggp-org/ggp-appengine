@@ -47,7 +47,7 @@ public final class GdlFactory
 
 	private static GdlConstant createConstant(SymbolAtom atom)
 	{
-		return GdlPool.getConstant(atom.getValue());
+        return GdlPool.getConstant(atom.getValue());
 	}
 
 	private static GdlDistinct createDistinct(SymbolList list)
@@ -94,15 +94,15 @@ public final class GdlFactory
 			SymbolList list = (SymbolList) symbol;
 			SymbolAtom type = (SymbolAtom) list.get(0);
 
-			if (type.getValue().equals("distinct"))
+			if (type.getValue().toLowerCase().equals("distinct"))
 			{
 				return createDistinct(list);
 			}
-			else if (type.getValue().equals("not"))
+			else if (type.getValue().toLowerCase().equals("not"))
 			{
 				return createNot(list);
 			}
-			else if (type.getValue().equals("or"))
+			else if (type.getValue().toLowerCase().equals("or"))
 			{
 				return createOr(list);
 			}
@@ -170,7 +170,12 @@ public final class GdlFactory
 		}
 	}
 
-	private static GdlTerm createTerm(Symbol symbol)
+	public static GdlTerm createTerm(String string) throws SymbolFormatException
+	{
+		return createTerm(SymbolFactory.create(string));
+	}
+
+	public static GdlTerm createTerm(Symbol symbol)
 	{
 		if (symbol instanceof SymbolAtom)
 		{

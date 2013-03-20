@@ -78,8 +78,8 @@ public final class RequestBuilder
 		return "( ABORT " + matchId + " )";
 	}
 	
-	public static String getPingRequest()
+	public static String getInfoRequest()
 	{
-		return "( PING )";
+		return "( INFO )";
 	}
 }

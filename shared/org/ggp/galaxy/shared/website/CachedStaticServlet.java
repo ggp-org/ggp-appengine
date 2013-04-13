@@ -68,7 +68,10 @@ public abstract class CachedStaticServlet extends HttpServlet {
 
         // Task queue handler should never hit the cache.
         if (reqURI.startsWith("/tasks/")) {
-        	int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
+        	int nRetryAttempt = 0;
+        	if (req.getHeader("X-AppEngine-TaskRetryCount") != null) {
+        		nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
+        	}
             if (handleTaskQueueRequest(reqURI.substring("/tasks".length()), nRetryAttempt)) {
             	resp.setStatus(200);
             } else {

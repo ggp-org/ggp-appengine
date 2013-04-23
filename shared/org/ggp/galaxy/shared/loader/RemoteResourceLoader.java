@@ -35,7 +35,11 @@ public class RemoteResourceLoader {
     
     public static String loadRaw(String theURL) throws IOException {
         URL url = new URL(theURL);
-        URLConnection urlConnection = url.openConnection();                
+        URLConnection urlConnection = url.openConnection();
+        urlConnection.setUseCaches(false);
+        urlConnection.setDefaultUseCaches(false);
+        urlConnection.addRequestProperty("Cache-Control", "no-cache,max-age=0"); 
+        urlConnection.addRequestProperty("Pragma", "no-cache"); 
         if (urlConnection.getContentLength() == 0)
             throw new IOException("Could not load URL: " + theURL);
         StringBuilder theJSON = new StringBuilder();

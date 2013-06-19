@@ -50,8 +50,11 @@ public final class RemoteGameRepository extends GameRepository {
 
         try {
             JSONObject theMetadata = getGameMetadataFromRepository(theGameURL);
-            return loadSingleGameFromMetadata(theKey, theGameURL, theMetadata);            
-        } catch(IOException e) {
+            return loadSingleGameFromMetadata(theKey, theGameURL, theMetadata);
+        } catch (JSONException e) {
+        	e.printStackTrace();
+        	return null;
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -85,6 +88,8 @@ public final class RemoteGameRepository extends GameRepository {
     JSONObject getBundledMetadata() {
         try {
             return RemoteResourceLoader.loadJSON(theRepoURL + "/games/metadata");
+        } catch (JSONException e) {
+        	return null;
         } catch (IOException e) {
             return null;
         }
@@ -103,8 +108,8 @@ public final class RemoteGameRepository extends GameRepository {
         return theGameURL.endsWith("/v" + theVersion + "/");
     }
 
-    protected static JSONObject getGameMetadataFromRepository(String theGameURL) throws IOException {
-        return RemoteResourceLoader.loadJSON(theGameURL);
+    protected static JSONObject getGameMetadataFromRepository(String theGameURL) throws JSONException, IOException {
+   		return RemoteResourceLoader.loadJSON(theGameURL);
     }
     
     protected static String getGameResourceFromMetadata(String theGameURL, JSONObject theMetadata, String theResource) {

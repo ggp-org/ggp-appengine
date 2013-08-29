@@ -9,8 +9,6 @@ import org.ggp.galaxy.shared.symbol.grammar.Symbol;
 import org.ggp.galaxy.shared.symbol.grammar.SymbolAtom;
 import org.ggp.galaxy.shared.symbol.grammar.SymbolList;
 import org.ggp.galaxy.shared.symbol.grammar.SymbolPool;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Wherein we poorly reinvent JSON, so that we can keep INFO responses
@@ -70,17 +68,6 @@ public class InfoResponse {
 	}
 	
 	public static InfoResponse create(String original) {
-		try {
-			// TODO(schreib): Phase this out once everybody has upgraded to the
-			// new symbol-based info responses.
-			JSONObject infoJSON = new JSONObject(original);
-			InfoResponse info = new InfoResponse();
-			info.setName(infoJSON.getString("name"));
-			info.setStatus(infoJSON.getString("status"));
-			return info;
-		} catch (JSONException je) {
-			;
-		}			
 		try {
 			return new InfoResponse(SymbolFactory.create(original));
 		} catch (SymbolFormatException e) {

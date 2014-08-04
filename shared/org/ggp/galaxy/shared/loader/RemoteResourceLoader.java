@@ -45,7 +45,9 @@ public class RemoteResourceLoader {
 		        urlConnection.setUseCaches(false);
 		        urlConnection.setDefaultUseCaches(false);
 		        urlConnection.addRequestProperty("Cache-Control", "no-cache,max-age=0"); 
-		        urlConnection.addRequestProperty("Pragma", "no-cache"); 
+		        urlConnection.addRequestProperty("Pragma", "no-cache");
+		        urlConnection.setReadTimeout(30000);
+		        urlConnection.setConnectTimeout(30000);
 		        if (urlConnection.getContentLength() == 0)
 		            throw new IOException("Could not load URL: " + theURL);
 		        StringBuilder theRawData = new StringBuilder();
